@@ -8,7 +8,7 @@ from transformers import pipeline
 
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN"]
+WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY" "SPCX" "NFLX"]
 TARGET_DAYS_OUT = 30
 RISK_FREE_RATE = 0.05
 
@@ -96,57 +96,56 @@ def find_best_option(ticker_symbol, strategy="call"):
         "delta": best_option['Delta'],
         "type": strategy.upper()
     }
-
-# --- 4. Execution ---
+# --- 4. Execution (Modified for Top 3) ---
 print("Scanning market...")
 scores = {symbol: get_stock_score(symbol) for symbol in WATCHLIST}
 
-# Find most bullish and most bearish stock
-most_bullish = max(scores, key=scores.get)
-most_bearish = min(scores, key=scores.get)
+trade_opportunities = []
 
-bull_score = scores[most_bullish]
-bear_score = scores[most_bearish]
+for stock, score in scores.items():
+    if score > 20:
+    print(f"Strong Bull Signal for {stock} (Score: {score}). Searching for Calls...")
+    opt = find_best_option(stock, "call")
+    if opt:
+        trade_opportunities.append({"stock": stock, "score": score, "strategy": "CALL", "option": opt})
 
-option_data = None
-strategy = None
-target_stock = None
-target_score = None
+    elif score < -20:
+        print(f"Strong Bear Signal for {stock} (Score: {score}). Searching for Puts...")
+        opt = find_best_option(stock, "put")
+        if opt:
+            trade_opportunities.append({"stock": stock, "score": score, "strategy": "PUT", "option": opt})
 
-# If there is a very strong bullish signal (Score > 20), look for a Call
-if bull_score > 20:
-    print(f"Strong Bull Signal for {most_bullish} (Score: {bull_score}). Searching for Calls...")
-    option_data = find_best_option(most_bullish, "call")
-    strategy, target_stock, target_score = "CALL (Bullish)", most_bullish, bull_score
+# Sort the list by the STRONGEST signal (absolute value of score)
+trade_opportunities.sort(key=lambda x: abs(x["score"]), reverse=True)
 
-# If no good Call, check if there is a strong bearish signal (Score < -20) for a Put
-elif bear_score < -20:
-     print(f"Strong Bear Signal for {most_bearish} (Score: {bear_score}). Searching for Puts...")
-     option_data = find_best_option(most_bearish, "put")
-     strategy, target_stock, target_score = "PUT (Bearish)", most_bearish, bear_score
+# Keep only the top 3
+top_3_trades = trade_opportunities[:3]
 
-else:
-    print("Market is mixed. No strong signals today.")
+# --- 5. Discord Webhook (Modified for Multiple Embeds) ---
+if top_3_trades:
+    discord_embeds = []
 
-# --- 5. Discord Webhook ---
-if option_data:
-    color = 5763719 if option_data['type'] == "CALL" else 15548997 # Green for Call, Red for Put
-    discord_message = {
-        "username": "Algo-Trader Options Desk",
-        "embeds": [{
-            "title": f"🚨 {strategy} Setup: {target_stock}",
-            "description": f"**AI Sentiment Score:** {target_score:.1f} \n*(+50 is Max Bullish, -50 is Max Bearish)*\n\n**Recommended Trade:**",
+    for trade in top_3_trades:
+        color = 5763719 if trade['strategy'] == "CALL" else 15548997
+        discord_embeds.append({
+            "title": f"🚨 {trade['strategy']} Setup: {trade['stock']}",
+            "description": f"**AI Sentiment Score:** {trade['score']:.1f}\n\n**Recommended Trade:**",
             "color": color,
             "fields": [
-                {"name": "Contract Name", "value": f"`{option_data['contract']}`", "inline": False},
-                {"name": "Expiration Date", "value": f"{option_data['expiration']}", "inline": True},
-                {"name": "Strike Price", "value": f"${option_data['strike']:.2f}", "inline": True},
-                {"name": "Delta", "value": f"{option_data['delta']:.2f}", "inline": True},
-                {"name": "Entry Price (Ask)", "value": f"${option_data['ask_price']:.2f} per share", "inline": True},
-                {"name": "Total Cost to Buy", "value": f"**${option_data['cost']:.2f}**", "inline": True},
+                {"name": "Contract Name", "value": f"`{trade['option']['contract']}`", "inline": False},
+                {"name": "Expiration", "value": f"{trade['option']['expiration']}", "inline": True},
+                {"name": "Strike", "value": f"${trade['option']['strike']:.2f}", "inline": True},
+                {"name": "Delta", "value": f"{trade['option']['delta']:.2f}", "inline": True},
+                {"name": "Entry (Ask)", "value": f"${trade['option']['ask_price']:.2f}", "inline": True},
+                {"name": "Total Cost", "value": f"**${trade['option']['cost']:.2f}**", "inline": True},
             ]
-        }]
-    }
+        })
+
+    discord_message = {
+        "username": "Algo-Trader Options Desk",
+        "content": "🎯 **Top Daily Setups Found:**",
+        "embeds": discord_embeds
+    }  
 else:
     discord_message = {
         "username": "Algo-Trader Options Desk",
