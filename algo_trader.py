@@ -104,10 +104,10 @@ trade_opportunities = []
 
 for stock, score in scores.items():
     if score > 20:
-    print(f"Strong Bull Signal for {stock} (Score: {score}). Searching for Calls...")
-    opt = find_best_option(stock, "call")
-    if opt:
-        trade_opportunities.append({"stock": stock, "score": score, "strategy": "CALL", "option": opt})
+        print(f"Strong Bull Signal for {stock} (Score: {score}). Searching for Calls...")
+        opt = find_best_option(stock, "call")
+        if opt:
+            trade_opportunities.append({"stock": stock, "score": score, "strategy": "CALL", "option": opt})
 
     elif score < -20:
         print(f"Strong Bear Signal for {stock} (Score: {score}). Searching for Puts...")
