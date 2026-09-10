@@ -8,7 +8,7 @@ from transformers import pipeline
 
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY" "SPCX" "NFLX"]
+WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY", "SPCX", "NFLX"]
 TARGET_DAYS_OUT = 30
 RISK_FREE_RATE = 0.05
 
