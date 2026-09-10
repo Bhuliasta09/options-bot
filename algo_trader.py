@@ -9,7 +9,8 @@ from transformers import pipeline
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY", "SPCX", "NFLX"]
-TARGET_DAYS_OUT = 30
+TARGET_DAYS_OUT = 14          # Changed from 30 to 14 days out (2 weeks)
+MAX_CONTRACT_COST = 200.0     # Maximum totyal cost per contract ($200)
 RISK_FREE_RATE = 0.05
 
 print("Loading AI Sentiment Model...")
