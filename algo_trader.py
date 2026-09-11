@@ -141,7 +141,7 @@ if top_3_trades:
         color = 5763719 if trade['strategy'] == "CALL" else 15548997
         discord_embeds.append({
             "title": f"🚨 {trade['strategy']} Setup: {trade['stock']}",
-            "description": f"**AI Sentiment Score:** {trade['score']:.1f}\n\n**Recommended Trade:**",
+            "description": (f"AI Sentiment Score: {trade['s"Recommended Trade:"),
             "color": color,
             "fields": [
                 {"name": "Contract Name", "value": f"`{trade['option']['contract']}`", "inline": False},
