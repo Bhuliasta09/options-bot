@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 import scipy.stats as si
 from transformers import pipeline
-import pandas as pd
+import pandas as pd from io import StringIO
 
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
@@ -13,7 +13,7 @@ WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 print("Fetching dynamic ticker list...")
 url = "https://en.wikipedia.org/wiki/List_of_S%26p_500_companies"
 html = requests.get(url, headers={'user-agent': 'Mozilla/5.0'}).text
-table= pd.read_html(html)[0]
+table= pd.read_html(StringIO(html))[0]
 WATCHLIST = table[table['CIK'].notnull()]['Symbol'].tolist()[:50]
 TARGET_DAYS_OUT = 7          # Changed from 30 to 7 days out (1 weeks)
 MAX_CONTRACT_COST = 150.0     # Max budget $150 per contract (1.50 per contract)
