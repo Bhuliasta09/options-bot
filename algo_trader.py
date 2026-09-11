@@ -8,7 +8,10 @@ from transformers import pipeline
 
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY", "SPCX", "NFLX", "ORCL", "AVGO", "JPM", "ACVA", "SHOP"]
+# Fetch the top 50 highly liquid stocks from the S&P 500
+print("Fetching dynamic ticker list...")
+table = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
+WATCHLIST = table[table['CIK'].notnull()]['Symbol'].tolist()[:50]
 TARGET_DAYS_OUT = 7          # Changed from 30 to 7 days out (1 weeks)
 MAX_CONTRACT_COST = 150.0     # Max budget $150 per contract (1.50 per contract)
 RISK_FREE_RATE = 0.05
