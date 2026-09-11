@@ -58,7 +58,7 @@ def get_stock_score(ticker_symbol):
                 elif res['label'] == 'negative': sentiment_score -= 5
 
             sentiment_score = max(-25, min(25, sentiment_score))
-      except: pass
+    except: pass
 
     # Total score ranges from -50 (Strong Sell) to +50 (Strong Buy)
     return fund_score + sentiment_score
