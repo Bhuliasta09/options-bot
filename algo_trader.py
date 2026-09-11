@@ -9,7 +9,7 @@ from transformers import pipeline
 # --- Configuration ---
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 WATCHLIST = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "TSLA", "AMZN", "QQQ", "SPY", "SPCX", "NFLX", "ORCL", "AVGO", "JPM", "ACVA", "SHOP"]
-TARGET_DAYS_OUT = 14          # Changed from 30 to 14 days out (2 weeks)
+TARGET_DAYS_OUT = 7          # Changed from 30 to 7 days out (1 weeks)
 MAX_CONTRACT_COST = 150.0     # Max budget $150 per contract (1.50 per contract)
 RISK_FREE_RATE = 0.05
 
@@ -40,18 +40,13 @@ def get_stock_score(ticker_symbol):
     try:
         api_key = os.environ.get("NEWS_API_KEY")
 
-        # Replace this URL/payload with the specific API provider you sign up for!
-        query_payload = {
-            "queryString": f"symbols:{ticker_symbol} AND source.id:(bloomberg OR reuters OR cnbc)",
-            "from": 0,
-            "size": 5
-        }
+        # NewsAPI lets you filter by specific domains!
+        url = f"https://newsapi.org/v2/everything?domains=bloomberg.com,wsj.com,cnbc.com&q={ticker_symbol}&sortBy=publishedAt&apiKey={api_key}"
+        response = requests.get(url).json()
 
-        url = f"https://api.newsfilter.io/search?token={api_key}"
-        response = requests.post(url, json=query_payload).json()
-
-        if "articles" in response:
-            headlines = [article['title'] for article in response['articles']]
+        if response.get("status") == "ok" and "articles" in response:
+            # Grab the top 15 most recent headlines from those 3 sites
+            headlines = [article['title'] for article in response['articles'][:15]]
 
             results = sentiment_analyzer(headlines)
             for res in results:
@@ -59,7 +54,7 @@ def get_stock_score(ticker_symbol):
                 elif res['label'] == 'negative': sentiment_score -= 5
 
             sentiment_score = max(-25, min(25, sentiment_score))
-except: pass
+      except: pass
 
     # Total score ranges from -50 (Strong Sell) to +50 (Strong Buy)
     return fund_score + sentiment_score
