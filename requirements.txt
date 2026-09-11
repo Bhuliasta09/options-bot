@@ -4,3 +4,5 @@ torch
 requests
 numpy
 scipy
+pandas
+lxml
