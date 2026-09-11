@@ -144,6 +144,7 @@ if top_3_trades:
     for trade in top_3_trades:
         color = 5763719 if trade['strategy'] == "CALL" else 15548997
         print("RAW OPTION DATA:", trade['option'])
+        discord_embeds.append({
             "title": f"🚨 {trade['strategy']} Setup: {trade['stock']}",
             "description": f"AI Sentiment Score: {trade['score']}\n🎯 Projected Profit (100% Target): ${round(trade['option']['ask'] * 100, 2)}\nRecommended Trade:",
             "color": color,
