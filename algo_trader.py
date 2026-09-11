@@ -38,16 +38,28 @@ def get_stock_score(ticker_symbol):
     except: pass
 
     try:
-        news = ticker.news
-        if news:
-            headlines = [item['title'] for item in news[:5]]
+        api_key = os.environ.get("NEWS_API_KEY")
+
+        # Replace this URL/payload with the specific API provider you sign up for!
+        query_payload = {
+            "queryString": f"symbols:{ticker_symbol} AND source.id:(bloomberg OR reuters OR cnbc)",
+            "from": 0,
+            "size": 5
+        }
+
+        url = f"https://api.newsfilter.io/search?token={api_key}"
+        response = requests.post(url, json=query_payload).json()
+
+        if "articles" in response:
+            headlines = [article['title'] for article in response['articles']]
+
             results = sentiment_analyzer(headlines)
             for res in results:
                 if res['label'] == 'positive': sentiment_score += 5
                 elif res['label'] == 'negative': sentiment_score -= 5
-            # Score sentiment from -25 (Bearish) to +25 (Bullish)
+
             sentiment_score = max(-25, min(25, sentiment_score))
-    except: pass
+except: pass
 
     # Total score ranges from -50 (Strong Sell) to +50 (Strong Buy)
     return fund_score + sentiment_score
