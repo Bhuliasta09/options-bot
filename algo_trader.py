@@ -12,7 +12,7 @@ WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 # Fetch the top 50 highly liquid stocks from the S&P 500
 print("Fetching dynamic ticker list...")
 url = "https://en.wikipedia.org/wiki/List_of_S%26p_500_companies"
-html = request.get(url, headers={'user-agent': 'Mozilla/5.0'}).text
+html = requests.get(url, headers={'user-agent': 'Mozilla/5.0'}).text
 table= pd.read_html(html)[0]
 WATCHLIST = table[table['CIK'].notnull()]['Symbol'].tolist()[:50]
 TARGET_DAYS_OUT = 7          # Changed from 30 to 7 days out (1 weeks)
