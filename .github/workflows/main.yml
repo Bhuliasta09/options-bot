@@ -2,7 +2,7 @@ name: Daily Options Trader
 on:
   schedule:
     # Runs every 3 hours, Monday through Friday
-    - cron:  '0 */3 * * 1-5'
+    - cron:  '30 8 * * 1-5'
   workflow_dispatch:
 jobs:
   run-bot:
