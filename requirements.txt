@@ -1,10 +1,11 @@
 yfinance
-transformers
-torch
 requests
 numpy
-scipy
+spicy
 pandas
+transformers
+torch
 html5lib
 beautifulsoup4
 lxml
+aiohttp
