@@ -172,4 +172,4 @@ async def main():
     requests.post(WEBHOOK_URL, json=discord_message)
 
 if __name__ == "__main__":
-    asyncio.run(main())age)
+    asyncio.run(main()))
