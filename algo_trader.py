@@ -64,6 +64,7 @@ def find_best_option(ticker_symbol, strategy="call"):
 
     expirations = stock.options
     target_exp, best_diff = None, 9999
+    liquid_options['IV'] = liquid_options['impliedVolatility']
 
     for exp in expirations:
         days_to_exp = (datetime.strptime(exp, "%Y-%m-%d") - datetime.now()).days
@@ -79,7 +80,15 @@ def find_best_option(ticker_symbol, strategy="call"):
     liquid_options = options[(options['volume'] > 50) & (options['openInterest'] > 100)].copy()
     if liquid_options.empty:
         return None
-
+    
+    # Filter out options with extreme IV spikes (> 80th percentile equivalent proxy)
+    liquid option['IV'] = liquid_options['impliedvolatility']
+    mean_iv = liquid_options['IV'].mean()
+    liquid_options = liquid_options[liquid_options['IV'] <= (mean_iv * 1.2)]
+    if liquid_options.empty:
+        return None
+    # -------------------------------------------
+    
     liquid_options['Delta'] = liquid_options.apply(
         lambda row: calculate_delta(current_price, row['strike'], best_diff / 365.0, RISK_FREE_RATE, row['impliedVolatility'], strategy), axis=1
     )
@@ -107,11 +116,28 @@ def find_best_option(ticker_symbol, strategy="call"):
         "delta": best_option['Delta'],
         "type": strategy.upper()
     }
+def has_upcoming_earnings(ticker_symbol):
+    try:
+        ticker = yf.Ticker(ticker_symbol)
+        calendar = ticker.calendar
+        if calendar is not None and not calendar.empty:
+            earnings_date = pd.to_datetime(calendar.iloc[0]['Earnings Date'])
+            days_until_earnings = (earnings_date - pd.Timestamp.now()).days
+            if 0 <= days_until_earnings <= 10:
+                return True
+    except:
+        pass
+    return False
 
 async def process_ticker(symbol):
-    """Asynchronous worker to process individual stocks concurrently."""
     loop = asyncio.get_running_loop()
     print(f"Scanning {symbol}...")
+
+    # Skip if earnings are right around the corner
+    is_earnings_near = await loop.run_in_executor(None, has_upcoming_earnings, symbol)
+    if is_earnings_near:
+        print(f"Skipping {symbol} due to upcoming earnings volatility.")
+        return None
 
     score = await loop.run_in_executor(None, get_stock_score, symbol)
     trade_info = None
