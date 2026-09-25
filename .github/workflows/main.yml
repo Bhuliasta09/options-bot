@@ -2,7 +2,9 @@ name: Daily Options Trader
 on:
   schedule:
     # Runs every 3 hours, Monday through Friday
-    - cron:  '30 8 * * 1-5'
+    - cron:  '*/30 13-20 * * 1-5'
+    # Runs every 30 minutes from 14:00 to 19:30 utc (9:00 AM - 2:30 PM CDT)branch_protection_rule:
+    - cron: '*/30 14-19 * * 1-5'
   workflow_dispatch:
 jobs:
   run-bot:
