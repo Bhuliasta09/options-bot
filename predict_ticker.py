@@ -58,10 +58,10 @@ def analyze_single_stock(ticker_symbol):
                         sentiment_score += 5
                     elif res["label"] == "negative":
                         sentiment_score -= 5
-                 sentiment_score = max(-25, min(25, sentiment_score))
+                sentiment_score = max(-25, min(25, sentiment_score))
     except:
         pass
-
+        
     total_score = fund_score + sentiment_score
     print(f"Stock Score for {ticker_symbol}: {total_score} (Fundamentals: {fund_score}, Sentiment: {sentiment_score})")
 
