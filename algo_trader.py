@@ -130,29 +130,32 @@ def has_upcoming_earnings(ticker_symbol):
     return False
 
 async def process_ticker(symbol):
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_running_log() if hasattr(asyncio, 'get_running_log') else asyncio.get_running_loop()
     print(f"Scanning {symbol}...")
 
-    # Skip if earnings are right around the corner
-    is_earnings_near = await loop.run_in_executor(None, has_upcoming_earnings, symbol)
-    if is_earnings_near:
-        print(f"Skipping {symbol} due to upcoming earnings volatility.")
-        return None
+    try:
+        is_earnings_near = await loop.run_in_executor(None, has_upcoming_earnings, symbol)
+        if is_earnings_near:
+            print(f"Skipping {symbol} due to upcoming earnings volatility.")
+            return None
 
-    score = await loop.run_in_executor(None, get_stock_score, symbol)
-    trade_info = None
+        score = await loop.run_in_executor(None, get_stock_score, symbol)
+        trade_info = None
 
-    if score > 20:
-        print(f"Strong Bull Signal for {symbol} (Score: {score}). Searching for Calls...")
-        trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "call"))
-        if trade_info:
-            return {"stock": symbol, "score": score, "strategy": "CALL", "option": trade_info}
-    elif score < -20:
-        print(f"Strong Bear Signal for {symbol} (Score: {score}). Searching for Puts...")
-        trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "put"))
-        if trade_info:
-            return {"stock": symbol, "score": score, "strategy": "PUT", "option": trade_info}
+        if score > 20:
+            print(f"Strong Bull Signal for {symbol} (Score: {score}). Searching for Calls...")
+            trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "call"))
+            if trade_info:
+                return {"stock": symbol, "score": score, "strategy": "CALL", "option": trade_info}
+        elif score < -20:
+            print(f"Strong Bear Signal for {symbol} (Score: {score}). Searching for Puts...")
+            trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "put"))
+            if trade_info:
+                return {"stock": symbol, "score": score, "strategy": "PUT", "option": trade_info}
+    except Exception as e:
+        print(f"Error processing {symbol}: {e}")
 
+    await asyncio.sleep(0.1) # Yield control briefly to prevent rate limits
     return None
 
 async def main():
