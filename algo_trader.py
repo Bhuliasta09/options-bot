@@ -8,6 +8,7 @@ from datetime import datetime
 import scipy.stats as si
 from transformers import pipeline
 import pandas as pd
+import predict_ticker.py
 from io import StringIO
 
 # --- Configuration ---
