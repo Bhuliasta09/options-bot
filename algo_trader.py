@@ -82,7 +82,7 @@ def find_best_option(ticker_symbol, strategy="call"):
         return None
     
     # Filter out options with extreme IV spikes (> 80th percentile equivalent proxy)
-    liquid option['IV'] = liquid_options['impliedvolatility']
+    liquid_option['IV'] = liquid_options['impliedvolatility']
     mean_iv = liquid_options['IV'].mean()
     liquid_options = liquid_options[liquid_options['IV'] <= (mean_iv * 1.2)]
     if liquid_options.empty:
