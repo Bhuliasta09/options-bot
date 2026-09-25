@@ -128,6 +128,26 @@ def has_upcoming_earnings(ticker_symbol):
     except:
         pass
     return False
+def get_macro_market_sentiment():
+    try:
+        api_key = os.environ.get("NEWS_API_KEY")
+        if api_key:
+            url = f"https://newsapi.org/v2/everything?q=Federal%20Reserve%20OR%20stock%20market%20OR%20inflation&language=en&sortBy=publishedAt&apiKey={api_key}"
+            response = requests.get(url).json()
+            if response.get("status") == "ok" and "articles" in response:
+                headlines = [article["title"] for article in response["articles"][:20]]
+                results = sentiment_analyzer(headlines)
+
+            macro_score = 0
+            for res in results:
+                if res["label"] == "positive":
+                    macro_score += 2
+                elif res["label"] == "negative":
+                    macro_score -= 2
+            return macro_score
+    except:
+        pass
+    return 0
 
 async def process_ticker(symbol):
     loop = asyncio.get_running_log() if hasattr(asyncio, 'get_running_log') else asyncio.get_running_loop()
@@ -141,6 +161,21 @@ async def process_ticker(symbol):
 
         score = await loop.run_in_executor(None, get_stock_score, symbol)
         trade_info = None
+        # Fetch broad market macro sentiment bias
+        macro_bias = await loop.run_in_executor(None, get_macro_market_sentiment)
+        print(f"Macro Sentiment Bias Score: {macro_bias}")
+
+        # Conditional threshold adjusted with macro confirmation
+        if score > 8 and macro_bias >= 0:
+            print(f"Strong Bull Signal with Macro Confirmation for {symbol} (Score: {score}). Searching for Calls...")
+            trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "call"))
+            if trade_info:
+                return {"stock": symbol, "score": score, "strategy": "CALL", "option": trade_info}
+        elif score < -8 and macro_bias <= 0:
+            print(f"Strong Bear Signal with Macro Confirmation for {symbol} (Score: {score}). Searching for Puts...")
+            trade_info = await loop.run_in_executor(None, lambda: find_best_option(symbol, "put"))
+            if trade_info:
+                return {"stock": symbol, "score": score, "strategy": "PUT", "option": trade_info}
 
         if score > 20:
             print(f"Strong Bull Signal for {symbol} (Score: {score}). Searching for Calls...")
